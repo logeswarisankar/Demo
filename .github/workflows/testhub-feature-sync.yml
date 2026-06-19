@@ -34,7 +34,7 @@ jobs:
       - name: Sync Feature to TestHub
         if: steps.feature_check.outputs.is_feature == 'true'
         run: |
-          curl -X POST "http://localhsot:5002/api/integrations/github/features" \
+          curl -X POST "http://localhost:5002/api/integrations/github/features" \
             -H "Content-Type: application/json" \
             -H "X-TestHub-ApiKey: th_live_4e8c2f9a1b6d47e3aa90c5f7d2b18e6c" \
             -d '{
