@@ -22,26 +22,34 @@ jobs:
               l => l.name.toLowerCase()
             );
 
+            const isFeature = labels.includes('feature');
+
+            console.log('Labels:', labels);
+            console.log('Is Feature:', isFeature);
+
             core.setOutput(
               'is_feature',
-              labels.includes('feature') ? 'true' : 'false'
+              isFeature ? 'true' : 'false'
             );
+
+      - name: Debug Event
+        shell: powershell
+        run: |
+          Write-Host "Action: ${{ github.event.action }}"
+          Write-Host "Issue Number: ${{ github.event.issue.number }}"
+          Write-Host "Issue Title: ${{ github.event.issue.title }}"
+          Write-Host "Feature Check: ${{ steps.feature_check.outputs.is_feature }}"
 
       - name: Skip Non-Feature Issues
         if: steps.feature_check.outputs.is_feature != 'true'
-        shell: pwsh
+        shell: powershell
         run: |
-          Write-Host "Issue does not have feature label. Skipping."
+          Write-Host "Issue does not contain the 'feature' label."
+          exit 0
 
-      - name: Verify TestHub API
+      - name: Sync Feature To TestHub
         if: steps.feature_check.outputs.is_feature == 'true'
-        shell: pwsh
-        run: |
-          Test-NetConnection localhost -Port 5002
-
-      - name: Sync Feature to TestHub
-        if: steps.feature_check.outputs.is_feature == 'true'
-        shell: pwsh
+        shell: powershell
         run: |
           $body = @{
             eventType   = "${{ github.event.action }}"
@@ -51,19 +59,26 @@ jobs:
             title       = "${{ github.event.issue.title }}"
             url         = "${{ github.event.issue.html_url }}"
             state       = "${{ github.event.issue.state }}"
-          } | ConvertTo-Json
+          } | ConvertTo-Json -Depth 5
 
-          Write-Host "Payload:"
+          Write-Host "Sending payload to TestHub..."
           Write-Host $body
 
-          $response = Invoke-RestMethod `
-            -Uri "http://localhost:5002/api/integrations/github/features" `
-            -Method Post `
-            -ContentType "application/json" `
-            -Headers @{
-              "X-TestHub-ApiKey" = "th_live_4e8c2f9a1b6d47e3aa90c5f7d2b18e6c"
-            } `
-            -Body $body
+          try {
+              $response = Invoke-RestMethod `
+                -Uri "http://localhost:5002/api/integrations/github/features" `
+                -Method POST `
+                -ContentType "application/json" `
+                -Headers @{
+                    "X-TestHub-ApiKey" = "th_live_4e8c2f9a1b6d47e3aa90c5f7d2b18e6c"
+                } `
+                -Body $body
 
-          Write-Host "Response:"
-          Write-Host ($response | ConvertTo-Json -Depth 5)
+              Write-Host "Response:"
+              $response | ConvertTo-Json -Depth 10
+          }
+          catch {
+              Write-Host "Request Failed"
+              Write-Host $_.Exception.Message
+              throw
+          }
