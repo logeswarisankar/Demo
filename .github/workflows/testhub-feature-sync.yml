@@ -59,6 +59,7 @@ jobs:
             title       = "${{ github.event.issue.title }}"
             url         = "${{ github.event.issue.html_url }}"
             state       = "${{ github.event.issue.state }}"
+            labels      = "feature"
           } | ConvertTo-Json -Depth 5
 
           Write-Host "Sending payload to TestHub..."
