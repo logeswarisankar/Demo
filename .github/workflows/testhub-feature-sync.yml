@@ -57,7 +57,7 @@ jobs:
             repository  = "${{ github.event.repository.name }}"
             issueNumber = ${{ github.event.issue.number }}
             title       = "${{ github.event.issue.title }}"
-            description  = @"${{ github.event.issue.body }}"@
+            description  = @("${{ github.event.issue.body }}")
             url         = "${{ github.event.issue.html_url }}"
             state       = "${{ github.event.issue.state }}"
             labels      = @("${{ github.event.label.name }}")
