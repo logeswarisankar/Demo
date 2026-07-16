@@ -68,7 +68,7 @@ jobs:
 
           try {
               $response = Invoke-RestMethod `
-                -Uri "http://localhost:5002/api/integrations/github/features" `
+                -Uri "http://localhost:5004/api/integrations/github/features" `
                 -Method POST `
                 -ContentType "application/json" `
                 -Headers @{
